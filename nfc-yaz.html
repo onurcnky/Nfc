@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>NFC Etiket Yazıcı — Arga Safety</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0d1117;
+  --bg2:      #161b27;
+  --bg3:      #1e2535;
+  --line:     rgba(255,255,255,0.06);
+  --line2:    rgba(255,255,255,0.12);
+  --line3:    rgba(255,255,255,0.22);
+  --accent:   #f97316;
+  --accent2:  #fb923c;
+  --ok:       #22c55e;
+  --warn:     #eab308;
+  --err:      #ef4444;
+  --blue:     #3b82f6;
+  --text:     #f1f5f9;
+  --text2:    #94a3b8;
+  --text3:    #475569;
+  --r:        16px;
+  --r-sm:     10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { background: var(--bg); }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100svh;
+  max-width: 430px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+/* ── HEADER ── */
+.header {
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 99;
+  background: rgba(13,17,23,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px; letter-spacing: 0.1em;
+  color: var(--text2);
+}
+.logo span { color: var(--accent); }
+.header-sub { font-size: 11px; color: var(--text3); margin-top: 1px; letter-spacing: 0.04em; }
+.step-indicator {
+  display: flex; align-items: center; gap: 5px;
+}
+.step-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--line3);
+  transition: all 0.3s;
+}
+.step-dot.active { background: var(--accent); border-color: var(--accent); }
+.step-dot.done { background: var(--ok); border-color: var(--ok); }
+
+/* ── STEPS ── */
+.step { display: none; padding: 24px 20px 0; animation: fadeUp 0.35s ease both; }
+.step.active { display: block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+
+.step-header { margin-bottom: 20px; }
+.step-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px; letter-spacing: 0.15em;
+  color: var(--accent); margin-bottom: 4px;
+}
+.step-title {
+  font-size: 22px; font-weight: 600; line-height: 1.2;
+}
+.step-desc { font-size: 14px; color: var(--text2); margin-top: 6px; line-height: 1.5; }
+
+/* ── NFC READ AREA ── */
+.nfc-area {
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.nfc-area:hover { border-color: var(--line3); }
+.nfc-area.scanning { border-color: var(--accent); cursor: default; }
+.nfc-area.success  { border-color: var(--ok); cursor: default; }
+.nfc-area.error    { border-color: var(--err); }
+
+.nfc-ripple {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: rgba(249,115,22,0.08);
+  border: 1px solid rgba(249,115,22,0.2);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  position: relative;
+  font-size: 32px;
+}
+.nfc-ripple::before, .nfc-ripple::after {
+  content: '';
+  position: absolute; inset: -10px; border-radius: 50%;
+  border: 1px solid rgba(249,115,22,0.15);
+  opacity: 0;
+}
+.nfc-ripple::after { inset: -20px; border-color: rgba(249,115,22,0.08); }
+.scanning .nfc-ripple::before { animation: ripple 1.6s ease-out infinite; }
+.scanning .nfc-ripple::after  { animation: ripple 1.6s 0.5s ease-out infinite; }
+@keyframes ripple { 0% { inset:-2px; opacity:0.7; } 100% { inset:-28px; opacity:0; } }
+
+.success .nfc-ripple { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.25); }
+.error   .nfc-ripple { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
+
+.nfc-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.nfc-sub   { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+.uid-display {
+  margin-top: 16px;
+  padding: 10px 16px;
+  background: var(--bg3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line2);
+  display: none;
+}
+.uid-label { font-size: 10px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.uid-value {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px; color: var(--accent2);
+  word-break: break-all; letter-spacing: 0.05em;
+}
+
+/* ── PRODUCT SELECT ── */
+.product-grid { display: flex; flex-direction: column; gap: 8px; }
+.product-card {
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: all 0.15s;
+}
+.product-card:hover  { border-color: var(--line3); background: var(--bg3); }
+.product-card.active { border-color: var(--accent); background: rgba(249,115,22,0.06); }
+.product-name { font-size: 15px; font-weight: 500; }
+.product-code {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--text3);
+  margin-top: 3px;
+}
+.product-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid var(--line3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.15s;
+  font-size: 12px;
+}
+.product-card.active .product-check {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+
+/* ── CAMERA / OCR ── */
+.camera-wrap {
+  border-radius: var(--r); overflow: hidden;
+  background: #000; position: relative;
+  aspect-ratio: 4/3;
+  border: 1px solid var(--line2);
+}
+#ocr-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.camera-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.scan-frame {
+  width: 75%; aspect-ratio: 4/1;
+  border: 2px solid rgba(249,115,22,0.7);
+  border-radius: 8px; position: relative;
+}
+.scan-frame::before, .scan-frame::after {
+  content: ''; position: absolute;
+  width: 18px; height: 18px; border-color: var(--accent); border-style: solid;
+}
+.scan-frame::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
+.scan-frame::after  { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 6px 0; }
+.scan-laser {
+  position: absolute; left: 4px; right: 4px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: laser 1.8s ease-in-out infinite;
+}
+@keyframes laser { 0%,100% { top: 6px; } 50% { bottom: 6px; top: auto; } }
+
+.camera-placeholder {
+  aspect-ratio: 4/3;
+  background: var(--bg2);
+  border: 1px dashed var(--line3);
+  border-radius: var(--r);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; color: var(--text3);
+  font-size: 14px; cursor: pointer;
+  transition: all 0.15s;
+}
+.camera-placeholder:hover { border-color: var(--accent); color: var(--text2); }
+.camera-placeholder span { font-size: 36px; }
+
+.ocr-result {
+  margin-top: 12px;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+}
+.ocr-result-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.ocr-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 15px; color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.ocr-input:focus { border-color: var(--accent); }
+.ocr-hint { font-size: 12px; color: var(--text3); margin-top: 6px; }
+
+/* ── CONFIRM ── */
+.confirm-card {
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.confirm-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px; font-weight: 500;
+  color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em;
+}
+.confirm-row {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 12px;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.confirm-row:last-child { border-bottom: none; }
+.confirm-key { font-size: 13px; color: var(--text2); flex-shrink: 0; }
+.confirm-val {
+  font-size: 13px; font-weight: 500;
+  text-align: right; word-break: break-all;
+}
+.confirm-val.mono {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; color: var(--accent2);
+}
+.url-preview {
+  margin-top: 14px;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+}
+.url-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.url-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; color: var(--ok);
+  word-break: break-all; line-height: 1.6;
+}
+
+/* ── WRITE ── */
+.write-area {
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  padding: 28px 20px;
+  text-align: center;
+}
+.write-area.writing { border-color: var(--blue); }
+.write-area.done    { border-color: var(--ok); }
+.write-area.error   { border-color: var(--err); }
+
+.write-icon {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: rgba(59,130,246,0.08);
+  border: 1px solid rgba(59,130,246,0.2);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; font-size: 32px;
+  position: relative;
+}
+.writing .write-icon::after {
+  content: '';
+  position: absolute; inset: -10px; border-radius: 50%;
+  border: 1px solid rgba(59,130,246,0.3);
+  animation: ripple 1.4s ease-out infinite;
+}
+.done  .write-icon { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.25); }
+.error .write-icon { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
+
+.write-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.write-sub   { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+/* ── BUTTONS ── */
+.btn-row { display: flex; gap: 10px; margin-top: 20px; }
+.btn {
+  flex: 1; padding: 14px 16px;
+  border-radius: var(--r-sm); border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 7px;
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.02em;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-primary   { background: var(--accent); color: #fff; }
+.btn-primary:not(:disabled):hover { opacity: 0.88; }
+.btn-secondary { background: var(--bg3); color: var(--text2); border: 1px solid var(--line2); }
+.btn-secondary:hover { border-color: var(--line3); color: var(--text); }
+.btn-ok        { background: var(--ok); color: #fff; }
+.btn-ok:hover  { opacity: 0.88; }
+.btn-full { width: 100%; flex: none; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: 999px; padding: 12px 20px;
+  font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 999; white-space: nowrap; max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.ok  { border-color: rgba(34,197,94,0.4); color: var(--ok); }
+.toast.err { border-color: rgba(239,68,68,0.4); color: var(--err); }
+
+/* ── MISC ── */
+.divider { height: 1px; background: var(--line); margin: 20px 0; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">ARGA <span>NFC</span></div>
+    <div class="header-sub">Etiket Yazıcı</div>
+  </div>
+  <div class="step-indicator">
+    <div class="step-dot active" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+    <div class="step-dot" id="dot4"></div>
+  </div>
+</div>
+
+<!-- ADIM 1: NFC ETİKET OKU -->
+<div class="step active" id="step1">
+  <div class="step-header">
+    <div class="step-num">ADIM 1 / 4</div>
+    <div class="step-title">Boş etiketi okut</div>
+    <div class="step-desc">NFC etiketini telefona yaklaştır, etiket UID'si okunacak.</div>
+  </div>
+
+  <div class="nfc-area" id="nfcReadArea" onclick="startNFCRead()">
+    <div class="nfc-ripple" id="nfcReadIcon">📡</div>
+    <div class="nfc-title" id="nfcReadTitle">Butona bas ve etiketi yaklaştır</div>
+    <div class="nfc-sub" id="nfcReadSub">Dokunmak için tıkla</div>
+    <div class="uid-display" id="uidDisplay">
+      <div class="uid-label">Etiket UID</div>
+      <div class="uid-value" id="uidValue">—</div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" id="skipUidBtn" onclick="skipUid()" style="display:none">Atla</button>
+    <button class="btn btn-primary" id="nextStep1Btn" onclick="goStep(2)" disabled>
+      Devam et →
+    </button>
+  </div>
+</div>
+
+<!-- ADIM 2: ÜRÜN SEÇ -->
+<div class="step" id="step2">
+  <div class="step-header">
+    <div class="step-num">ADIM 2 / 4</div>
+    <div class="step-title">Ürün modelini seç</div>
+    <div class="step-desc">Listeden etiketleyeceğin ürün modelini seç.</div>
+  </div>
+
+  <div class="product-grid" id="productGrid"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="goStep(1)">← Geri</button>
+    <button class="btn btn-primary" id="nextStep2Btn" onclick="goStep(3)" disabled>
+      Devam et →
+    </button>
+  </div>
+</div>
+
+<!-- ADIM 3: SERİ NO OKU -->
+<div class="step" id="step3">
+  <div class="step-header">
+    <div class="step-num">ADIM 3 / 4</div>
+    <div class="step-title">Seri numarasını okut</div>
+    <div class="step-desc">Kamerayı ürün etiketindeki seri numarasına tut.</div>
+  </div>
+
+  <div id="cameraSection">
+    <div class="camera-placeholder" id="cameraPlaceholder" onclick="startCamera()">
+      <span>📷</span>
+      Kamerayı aç
+    </div>
+    <div class="camera-wrap" id="cameraWrap" style="display:none">
+      <video id="ocr-video" autoplay playsinline muted></video>
+      <div class="camera-overlay">
+        <div class="scan-frame"><div class="scan-laser"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ocr-result mt-12">
+    <div class="ocr-result-label">Seri Numarası</div>
+    <input class="ocr-input" id="serialInput" type="text"
+      placeholder="Otomatik okunacak veya elle gir..."
+      oninput="onSerialInput()">
+    <div class="ocr-hint">Kamera okuyamazsa elle yazabilirsin</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="stopCamera(); goStep(2)">← Geri</button>
+    <button class="btn btn-primary" id="nextStep3Btn" onclick="stopCamera(); goStep(4)" disabled>
+      Devam et →
+    </button>
+  </div>
+</div>
+
+<!-- ADIM 4: ONAYLA & YAZ -->
+<div class="step" id="step4">
+  <div class="step-header">
+    <div class="step-num">ADIM 4 / 4</div>
+    <div class="step-title">Onayla ve yaz</div>
+    <div class="step-desc">Bilgileri kontrol et, ardından NFC etiketine yaz.</div>
+  </div>
+
+  <div class="confirm-card">
+    <div class="confirm-header">Etiket Özeti</div>
+    <div class="confirm-row">
+      <div class="confirm-key">Etiket UID</div>
+      <div class="confirm-val mono" id="confirmUid">—</div>
+    </div>
+    <div class="confirm-row">
+      <div class="confirm-key">Ürün Modeli</div>
+      <div class="confirm-val" id="confirmProduct">—</div>
+    </div>
+    <div class="confirm-row">
+      <div class="confirm-key">Seri No</div>
+      <div class="confirm-val mono" id="confirmSerial">—</div>
+    </div>
+    <div class="confirm-row">
+      <div class="confirm-key">Tarih</div>
+      <div class="confirm-val" id="confirmDate">—</div>
+    </div>
+  </div>
+
+  <div class="url-preview mt-16">
+    <div class="url-label">Yazılacak URL</div>
+    <div class="url-text" id="confirmUrl">—</div>
+  </div>
+
+  <div class="write-area mt-16" id="writeArea">
+    <div class="write-icon" id="writeIcon">✏️</div>
+    <div class="write-title" id="writeTitle">Yazmaya hazır</div>
+    <div class="write-sub" id="writeSub">Aşağıdaki butona bas, ardından etiketi yaklaştır</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" id="backBtn4" onclick="goStep(3)">← Geri</button>
+    <button class="btn btn-primary" id="writeBtn" onclick="startWrite()">
+      📡 NFC'ye Yaz
+    </button>
+  </div>
+
+  <button class="btn btn-ok btn-full mt-12" id="newTagBtn"
+    onclick="resetAll()" style="display:none">
+    ✓ Yeni Etiket Yaz
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── ÜRÜN LİSTESİ ──────────────────────────────────────────────────────────
+const PRODUCTS = [
+  { name: 'Dragon Fast Comfort',            code: 'dragon-fast-comfort' },
+  { name: 'Wolf Fast Comfort',              code: 'wolf-fast-comfort' },
+  { name: 'Aron Sabit Yatay Yaşam Hattı',  code: 'aron-sabit-yatay-yasam-hatti' },
+  // Buraya yeni ürün ekle:
+  // { name: 'Ürün Adı', code: 'url-kodu' },
+];
+
+const BASE_URL = 'https://smyloc.com/rdifurunler/';
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let state = {
+  uid: null,
+  product: null,
+  serial: null,
+};
+let currentStep = 1;
+let cameraStream = null;
+let ocrInterval = null;
+let nfcReader = null;
+
+// ── STEP NAVİGASYON ───────────────────────────────────────────────────────
+function goStep(n) {
+  document.getElementById('step' + currentStep).classList.remove('active');
+  currentStep = n;
+  document.getElementById('step' + n).classList.add('active');
+  updateDots();
+  if (n === 4) fillConfirm();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateDots() {
+  for (let i = 1; i <= 4; i++) {
+    const d = document.getElementById('dot' + i);
+    d.className = 'step-dot' +
+      (i < currentStep ? ' done' : i === currentStep ? ' active' : '');
+  }
+}
+
+// ── ADIM 1: NFC ETİKET OKU ───────────────────────────────────────────────
+async function startNFCRead() {
+  if (!('NDEFReader' in window)) {
+    showToast('❌ Bu tarayıcı Web NFC desteklemiyor', 'err');
+    // Elle UID girilebilsin diye atla butonu göster
+    state.uid = 'MANUEL';
+    document.getElementById('skipUidBtn').style.display = 'flex';
+    document.getElementById('nextStep1Btn').disabled = false;
+    return;
+  }
+
+  const area = document.getElementById('nfcReadArea');
+  const title = document.getElementById('nfcReadTitle');
+  const sub = document.getElementById('nfcReadSub');
+  const icon = document.getElementById('nfcReadIcon');
+
+  area.classList.add('scanning');
+  area.onclick = null;
+  title.textContent = 'Etiketi yaklaştır...';
+  sub.textContent = 'NFC okuma aktif';
+  icon.textContent = '📡';
+
+  try {
+    nfcReader = new NDEFReader();
+    await nfcReader.scan();
+
+    nfcReader.onreading = (event) => {
+      const uid = event.serialNumber
+        ? event.serialNumber.toUpperCase()
+        : 'UID-' + Date.now();
+
+      state.uid = uid;
+      area.classList.remove('scanning');
+      area.classList.add('success');
+      title.textContent = 'Etiket okundu!';
+      sub.textContent = 'UID başarıyla alındı';
+      icon.textContent = '✅';
+
+      document.getElementById('uidDisplay').style.display = 'block';
+      document.getElementById('uidValue').textContent = uid;
+      document.getElementById('nextStep1Btn').disabled = false;
+      showToast('✅ Etiket UID okundu', 'ok');
+    };
+
+    nfcReader.onreadingerror = () => {
+      area.classList.remove('scanning');
+      area.classList.add('error');
+      title.textContent = 'Okuma hatası';
+      sub.textContent = 'Tekrar dene';
+      icon.textContent = '⚠️';
+      area.onclick = startNFCRead;
+    };
+  } catch (e) {
+    area.classList.remove('scanning');
+    area.classList.add('error');
+    title.textContent = 'NFC izni gerekli';
+    sub.textContent = 'Site ayarları → NFC → İzin ver';
+    icon.textContent = '🔒';
+    area.onclick = startNFCRead;
+    // Atla butonunu göster
+    state.uid = 'MANUEL';
+    document.getElementById('skipUidBtn').style.display = 'flex';
+    document.getElementById('nextStep1Btn').disabled = false;
+  }
+}
+
+function skipUid() {
+  state.uid = 'MANUEL-' + Date.now();
+  document.getElementById('nextStep1Btn').disabled = false;
+  showToast('UID atlandı', '');
+}
+
+// ── ADIM 2: ÜRÜN SEÇ ──────────────────────────────────────────────────────
+function buildProductGrid() {
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = PRODUCTS.map((p, i) => `
+    <div class="product-card" id="pcard${i}" onclick="selectProduct(${i})">
+      <div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-code">${p.code}</div>
+      </div>
+      <div class="product-check" id="pcheck${i}"></div>
+    </div>
+  `).join('');
+}
+
+function selectProduct(i) {
+  PRODUCTS.forEach((_, j) => {
+    document.getElementById('pcard' + j).classList.remove('active');
+    document.getElementById('pcheck' + j).textContent = '';
+  });
+  document.getElementById('pcard' + i).classList.add('active');
+  document.getElementById('pcheck' + i).textContent = '✓';
+  state.product = PRODUCTS[i];
+  document.getElementById('nextStep2Btn').disabled = false;
+}
+
+// ── ADIM 3: KAMERA / OCR ─────────────────────────────────────────────────
+async function startCamera() {
+  document.getElementById('cameraPlaceholder').style.display = 'none';
+  document.getElementById('cameraWrap').style.display = 'block';
+
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
+    });
+    const video = document.getElementById('ocr-video');
+    video.srcObject = cameraStream;
+    await video.play();
+    startOCR();
+  } catch (e) {
+    showToast('❌ Kamera izni gerekli', 'err');
+    document.getElementById('cameraWrap').style.display = 'none';
+    document.getElementById('cameraPlaceholder').style.display = 'flex';
+  }
+}
+
+function stopCamera() {
+  if (ocrInterval) { clearInterval(ocrInterval); ocrInterval = null; }
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  document.getElementById('cameraWrap').style.display = 'none';
+  document.getElementById('cameraPlaceholder').style.display = 'flex';
+}
+
+function startOCR() {
+  // Tesseract.js CDN ile OCR
+  if (typeof Tesseract === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    s.onload = () => runOCRLoop();
+    document.head.appendChild(s);
+  } else {
+    runOCRLoop();
+  }
+}
+
+let ocrRunning = false;
+async function runOCRLoop() {
+  if (ocrRunning) return;
+  ocrRunning = true;
+
+  const video = document.getElementById('ocr-video');
+  const canvas = document.createElement('canvas');
+
+  ocrInterval = setInterval(async () => {
+    if (!cameraStream || video.readyState < 2) return;
+
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+
+    // Sadece ortadaki yatay şerit — seri no alanı
+    const stripH = Math.round(canvas.height * 0.18);
+    const stripY = Math.round(canvas.height * 0.41);
+    const strip  = ctx.getImageData(0, stripY, canvas.width, stripH);
+    const sc = document.createElement('canvas');
+    sc.width = canvas.width; sc.height = stripH;
+    sc.getContext('2d').putImageData(strip, 0, 0);
+
+    try {
+      const result = await Tesseract.recognize(sc, 'eng', { logger: () => {} });
+      const raw = result.data.text.replace(/\s+/g, '').toUpperCase();
+      // Seri no pattern: 2 harf + rakamlar (min 8 karakter)
+      const match = raw.match(/[A-Z]{2,4}[0-9]{8,}/);
+      if (match) {
+        const serial = match[0];
+        document.getElementById('serialInput').value = serial;
+        state.serial = serial;
+        document.getElementById('nextStep3Btn').disabled = false;
+        showToast('✅ Seri no okundu: ' + serial, 'ok');
+        stopCamera();
+        clearInterval(ocrInterval);
+        ocrRunning = false;
+      }
+    } catch(e) { /* sessiz hata */ }
+  }, 2000);
+}
+
+function onSerialInput() {
+  const val = document.getElementById('serialInput').value.trim();
+  state.serial = val || null;
+  document.getElementById('nextStep3Btn').disabled = !val;
+}
+
+// ── ADIM 4: ONAYLA & YAZ ─────────────────────────────────────────────────
+function buildUrl() {
+  if (!state.product || !state.serial) return '';
+  const serial = state.serial.toLowerCase().replace(/\s+/g, '');
+  return BASE_URL + state.product.code + '-' + serial;
+}
+
+function fillConfirm() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+  document.getElementById('confirmUid').textContent     = state.uid || '—';
+  document.getElementById('confirmProduct').textContent = state.product?.name || '—';
+  document.getElementById('confirmSerial').textContent  = state.serial || '—';
+  document.getElementById('confirmDate').textContent    = dateStr;
+  document.getElementById('confirmUrl').textContent     = buildUrl();
+}
+
+async function startWrite() {
+  if (!('NDEFReader' in window)) {
+    showToast('❌ Web NFC bu tarayıcıda desteklenmiyor', 'err');
+    return;
+  }
+
+  const url = buildUrl();
+  if (!url) { showToast('❌ URL oluşturulamadı', 'err'); return; }
+
+  const area  = document.getElementById('writeArea');
+  const icon  = document.getElementById('writeIcon');
+  const title = document.getElementById('writeTitle');
+  const sub   = document.getElementById('writeSub');
+  const btn   = document.getElementById('writeBtn');
+  const backBtn = document.getElementById('backBtn4');
+
+  area.className = 'write-area mt-16 writing';
+  icon.textContent  = '📡';
+  title.textContent = 'Etiketi yaklaştır...';
+  sub.textContent   = 'Yazma işlemi aktif';
+  btn.disabled = true;
+  backBtn.disabled = true;
+
+  try {
+    const ndef = new NDEFReader();
+    await ndef.write({ records: [{ recordType: 'url', data: url }] });
+
+    area.className = 'write-area mt-16 done';
+    icon.textContent  = '✅';
+    title.textContent = 'Yazıldı!';
+    sub.textContent   = url;
+    btn.style.display = 'none';
+    backBtn.style.display = 'none';
+    document.getElementById('newTagBtn').style.display = 'flex';
+    showToast('✅ NFC etikete başarıyla yazıldı!', 'ok');
+
+  } catch (e) {
+    area.className = 'write-area mt-16 error';
+    icon.textContent  = '❌';
+    title.textContent = 'Yazma başarısız';
+    sub.textContent   = 'Tekrar dene: ' + (e.message || '');
+    btn.disabled = false;
+    backBtn.disabled = false;
+    showToast('❌ Yazma hatası: ' + (e.message || ''), 'err');
+  }
+}
+
+// ── SIFIRLA ───────────────────────────────────────────────────────────────
+function resetAll() {
+  state = { uid: null, product: null, serial: null };
+  currentStep = 1;
+
+  // Step 1 sıfırla
+  const area = document.getElementById('nfcReadArea');
+  area.className = 'nfc-area';
+  area.onclick = startNFCRead;
+  document.getElementById('nfcReadTitle').textContent = 'Butona bas ve etiketi yaklaştır';
+  document.getElementById('nfcReadSub').textContent   = 'Dokunmak için tıkla';
+  document.getElementById('nfcReadIcon').textContent  = '📡';
+  document.getElementById('uidDisplay').style.display = 'none';
+  document.getElementById('nextStep1Btn').disabled = true;
+  document.getElementById('skipUidBtn').style.display = 'none';
+
+  // Step 2 sıfırla
+  PRODUCTS.forEach((_, i) => {
+    document.getElementById('pcard' + i)?.classList.remove('active');
+    const chk = document.getElementById('pcheck' + i);
+    if (chk) chk.textContent = '';
+  });
+  document.getElementById('nextStep2Btn').disabled = true;
+
+  // Step 3 sıfırla
+  document.getElementById('serialInput').value = '';
+  document.getElementById('nextStep3Btn').disabled = true;
+
+  // Step 4 sıfırla
+  document.getElementById('writeArea').className = 'write-area mt-16';
+  document.getElementById('writeIcon').textContent  = '✏️';
+  document.getElementById('writeTitle').textContent = 'Yazmaya hazır';
+  document.getElementById('writeSub').textContent   = 'Aşağıdaki butona bas, ardından etiketi yaklaştır';
+  document.getElementById('writeBtn').style.display = 'flex';
+  document.getElementById('writeBtn').disabled = false;
+  document.getElementById('backBtn4').style.display = 'flex';
+  document.getElementById('backBtn4').disabled = false;
+  document.getElementById('newTagBtn').style.display = 'none';
+
+  goStep(1);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+buildProductGrid();
+</script>
+</body>
+</html>
