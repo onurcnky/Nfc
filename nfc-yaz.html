@@ -432,8 +432,17 @@ body {
     </div>
     <div class="camera-wrap" id="cameraWrap" style="display:none">
       <video id="ocr-video" autoplay playsinline muted></video>
-      <div class="camera-overlay">
-        <div class="scan-frame"><div class="scan-laser"></div></div>
+      <div class="camera-overlay" style="flex-direction:column; gap:8px;">
+        <div style="font-size:12px; color:rgba(255,255,255,0.85); background:rgba(0,0,0,0.55);
+          padding:4px 14px; border-radius:999px; letter-spacing:0.02em;">
+          Seri numarasını çerçeveye al
+        </div>
+        <div class="scan-frame" style="width:88%; aspect-ratio:5/1;">
+          <div class="scan-laser"></div>
+        </div>
+        <div style="font-size:11px; color:rgba(255,255,255,0.5);">
+          Telefonu yaklaştır · iyi ışık olsun
+        </div>
       </div>
     </div>
   </div>
@@ -653,17 +662,102 @@ async function startCamera() {
 
   try {
     cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
+      video: {
+        facingMode: 'environment',
+        width:  { ideal: 1920 },
+        height: { ideal: 1080 },
+        focusMode: 'continuous', // sürekli autofocus
+      }
     });
+
     const video = document.getElementById('ocr-video');
     video.srcObject = cameraStream;
     await video.play();
+
+    // Sürekli autofocus aktif et
+    const track = cameraStream.getVideoTracks()[0];
+    if (track && track.getCapabilities) {
+      const caps = track.getCapabilities();
+      if (caps.focusMode && caps.focusMode.includes('continuous')) {
+        await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+      }
+    }
+
+    // Ekrana tıklayınca o noktaya odaklan
+    const wrap = document.getElementById('cameraWrap');
+    wrap.addEventListener('click', async (e) => {
+      const track = cameraStream?.getVideoTracks()[0];
+      if (!track) return;
+      const caps = track.getCapabilities?.();
+      if (!caps) return;
+
+      // Tıklama koordinatını normalize et (0-1 arası)
+      const rect = wrap.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top)  / rect.height;
+
+      // Odak noktası göster
+      showFocusRing(e.clientX - rect.left, e.clientY - rect.top);
+
+      try {
+        if (caps.focusMode?.includes('manual') && caps.focusDistance) {
+          await track.applyConstraints({
+            advanced: [{ focusMode: 'single-shot', pointsOfInterest: [{ x, y }] }]
+          });
+          // 0.8 saniye sonra tekrar continuous'a dön
+          setTimeout(async () => {
+            try {
+              await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+            } catch(e) {}
+          }, 800);
+        } else if (caps.focusMode?.includes('single-shot')) {
+          await track.applyConstraints({ advanced: [{ focusMode: 'single-shot' }] });
+          setTimeout(async () => {
+            try {
+              await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+            } catch(e) {}
+          }, 800);
+        }
+      } catch(e) { /* desteklenmiyor, sessiz geç */ }
+    });
+
     startOCR();
   } catch (e) {
     showToast('❌ Kamera izni gerekli', 'err');
     document.getElementById('cameraWrap').style.display = 'none';
     document.getElementById('cameraPlaceholder').style.display = 'flex';
   }
+}
+
+function showFocusRing(x, y) {
+  const wrap = document.getElementById('cameraWrap');
+  // Eski halkayı temizle
+  document.getElementById('focusRing')?.remove();
+  const ring = document.createElement('div');
+  ring.id = 'focusRing';
+  ring.style.cssText = `
+    position:absolute;
+    width:56px; height:56px;
+    border:2px solid #f97316;
+    border-radius:50%;
+    left:${x - 28}px; top:${y - 28}px;
+    pointer-events:none;
+    animation: focusFade 0.8s ease forwards;
+    z-index:10;
+  `;
+  wrap.appendChild(ring);
+  // Animasyon CSS ekle (bir kez)
+  if (!document.getElementById('focusStyle')) {
+    const s = document.createElement('style');
+    s.id = 'focusStyle';
+    s.textContent = `@keyframes focusFade {
+      0%   { opacity:1; transform:scale(1.3); }
+      40%  { opacity:1; transform:scale(1); }
+      100% { opacity:0; transform:scale(1); }
+    }`;
+    document.head.appendChild(s);
+  }
+  setTimeout(() => ring.remove(), 800);
 }
 
 function stopCamera() {
@@ -673,59 +767,78 @@ function stopCamera() {
   document.getElementById('cameraPlaceholder').style.display = 'flex';
 }
 
+// ── FOTOĞRAF ÇEK butonu göster, otomatik loop yok ────────────────────────
 function startOCR() {
-  // Tesseract.js CDN ile OCR
-  if (typeof Tesseract === 'undefined') {
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-    s.onload = () => runOCRLoop();
-    document.head.appendChild(s);
-  } else {
-    runOCRLoop();
-  }
+  // Otomatik loop yerine kullanıcı butona basınca fotoğraf çekip Claude'a gönder
+  showCaptureBtn();
 }
 
-let ocrRunning = false;
-async function runOCRLoop() {
-  if (ocrRunning) return;
-  ocrRunning = true;
+function showCaptureBtn() {
+  // Varsa eski butonu temizle
+  document.getElementById('captureBtn')?.remove();
 
+  const wrap = document.getElementById('cameraWrap');
+  const btn = document.createElement('button');
+  btn.id = 'captureBtn';
+  btn.textContent = '📸 Fotoğraf Çek';
+  btn.style.cssText = `
+    position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+    background:var(--accent); color:#fff; border:none;
+    padding:10px 24px; border-radius:999px;
+    font-family:'Outfit',sans-serif; font-size:14px; font-weight:600;
+    cursor:pointer; z-index:10; white-space:nowrap;
+    box-shadow: 0 4px 16px rgba(249,115,22,0.4);
+  `;
+  btn.onclick = captureAndOCR;
+  wrap.appendChild(btn);
+}
+
+async function captureAndOCR() {
   const video = document.getElementById('ocr-video');
+  if (!cameraStream || video.readyState < 2) return;
+
+  // Butonu yükleniyor yap
+  const btn = document.getElementById('captureBtn');
+  if (btn) { btn.textContent = '⏳ Okunuyor...'; btn.disabled = true; }
+
+  // Tam kareyi canvas'a çiz
   const canvas = document.createElement('canvas');
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
 
-  ocrInterval = setInterval(async () => {
-    if (!cameraStream || video.readyState < 2) return;
+  // Base64 JPEG olarak al (kalite 0.92)
+  const base64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
 
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
+  try {
+    const response = await fetch('/api/ocr', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base64 })
+    });
 
-    // Sadece ortadaki yatay şerit — seri no alanı
-    const stripH = Math.round(canvas.height * 0.18);
-    const stripY = Math.round(canvas.height * 0.41);
-    const strip  = ctx.getImageData(0, stripY, canvas.width, stripH);
-    const sc = document.createElement('canvas');
-    sc.width = canvas.width; sc.height = stripH;
-    sc.getContext('2d').putImageData(strip, 0, 0);
+    const data = await response.json();
+    const text = data.serial?.trim() || '';
 
-    try {
-      const result = await Tesseract.recognize(sc, 'eng', { logger: () => {} });
-      const raw = result.data.text.replace(/\s+/g, '').toUpperCase();
-      // Seri no pattern: 2 harf + rakamlar (min 8 karakter)
-      const match = raw.match(/[A-Z]{2,4}[0-9]{8,}/);
-      if (match) {
-        const serial = match[0];
-        document.getElementById('serialInput').value = serial;
-        state.serial = serial;
-        document.getElementById('nextStep3Btn').disabled = false;
-        showToast('✅ Seri no okundu: ' + serial, 'ok');
-        stopCamera();
-        clearInterval(ocrInterval);
-        ocrRunning = false;
-      }
-    } catch(e) { /* sessiz hata */ }
-  }, 2000);
+    // Seri no pattern kontrolü
+    const match = text.match(/[A-Z]{1,4}[0-9]{5,}/i);
+    const serial = match ? match[0].toUpperCase() : text.toUpperCase();
+
+    if (serial && serial.length >= 6) {
+      document.getElementById('serialInput').value = serial;
+      state.serial = serial;
+      document.getElementById('nextStep3Btn').disabled = false;
+      showToast('✅ Seri no okundu: ' + serial, 'ok');
+      stopCamera();
+    } else {
+      showToast('⚠️ Seri no bulunamadı, tekrar dene', 'err');
+      if (btn) { btn.textContent = '📸 Tekrar Dene'; btn.disabled = false; }
+    }
+
+  } catch(e) {
+    showToast('❌ Bağlantı hatası, elle gir', 'err');
+    if (btn) { btn.textContent = '📸 Tekrar Dene'; btn.disabled = false; }
+  }
 }
 
 function onSerialInput() {
