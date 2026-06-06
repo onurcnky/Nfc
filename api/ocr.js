@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (!image) return res.status(400).json({ error: 'image required' });
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'API key eksik - Vercel environment variable kontrol et' });
+  if (!apiKey) return res.status(500).json({ error: 'API key eksik' });
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errText = await response.text();
-      return res.status(500).json({ error: 'Anthropic API hatası: ' + errText });
+      return res.status(500).json({ error: 'API hatası: ' + errText });
     }
 
     const data = await response.json();
@@ -51,3 +51,4 @@ export default async function handler(req, res) {
   } catch (e) {
     return res.status(500).json({ error: 'Fetch hatası: ' + e.message });
   }
+}
