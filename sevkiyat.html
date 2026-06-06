@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Sevkiyat Listesi — Arga Safety</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d1117; --bg2:#161b27; --bg3:#1e2535;
+  --line:rgba(255,255,255,0.06); --line2:rgba(255,255,255,0.12); --line3:rgba(255,255,255,0.22);
+  --accent:#f97316; --accent2:#fb923c;
+  --ok:#22c55e; --warn:#eab308; --err:#ef4444; --blue:#3b82f6;
+  --text:#f1f5f9; --text2:#94a3b8; --text3:#475569;
+  --r:16px; --r-sm:10px;
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html { background:var(--bg); }
+body {
+  font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text);
+  min-height:100svh; max-width:430px; margin:0 auto; padding-bottom:48px;
+}
+
+/* HEADER */
+.header {
+  padding:16px 20px; border-bottom:1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:99;
+  background:rgba(13,17,23,0.92);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+}
+.logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:0.1em; color:var(--text2); }
+.logo span { color:var(--accent); }
+.header-sub { font-size:11px; color:var(--text3); margin-top:1px; }
+.back-btn {
+  display:flex; align-items:center; gap:6px;
+  font-size:13px; color:var(--text2);
+  background:var(--bg3); border:1px solid var(--line2);
+  padding:7px 14px; border-radius:999px; cursor:pointer;
+  text-decoration:none; transition:all 0.15s;
+}
+.back-btn:hover { color:var(--text); border-color:var(--line3); }
+
+/* CONTENT */
+.content { padding:24px 20px 0; animation:fadeUp 0.35s ease both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+
+.page-header { margin-bottom:20px; }
+.page-num { font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:0.15em; color:var(--accent); margin-bottom:4px; }
+.page-title { font-size:24px; font-weight:600; }
+.page-desc { font-size:14px; color:var(--text2); margin-top:6px; line-height:1.5; }
+
+/* STATS BAR */
+.stats-bar {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px;
+}
+.stat {
+  background:var(--bg2); border:1px solid var(--line2);
+  border-radius:var(--r-sm); padding:12px 14px; text-align:center;
+}
+.stat-val { font-family:'Bebas Neue',sans-serif; font-size:26px; color:var(--text); }
+.stat-val.ok { color:var(--ok); }
+.stat-label { font-size:11px; color:var(--text3); margin-top:2px; }
+
+/* SCAN AREA */
+.scan-area {
+  background:var(--bg2); border:1.5px dashed var(--line3);
+  border-radius:var(--r); padding:24px 20px;
+  text-align:center; cursor:pointer; margin-bottom:16px;
+  transition:all 0.2s; position:relative; overflow:hidden;
+}
+.scan-area:hover { border-color:var(--accent); background:var(--bg3); }
+.scan-area.scanning { border-color:var(--accent); border-style:solid; background:rgba(249,115,22,0.04); cursor:default; }
+.scan-area.success  { border-color:var(--ok); border-style:solid; background:rgba(34,197,94,0.04); }
+
+.scan-icon {
+  width:64px; height:64px; border-radius:50%;
+  background:rgba(249,115,22,0.08); border:1px solid rgba(249,115,22,0.2);
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 14px; font-size:28px; position:relative;
+}
+.scan-icon::after {
+  content:''; position:absolute; inset:-8px; border-radius:50%;
+  border:1px solid rgba(249,115,22,0.2); opacity:0;
+}
+.scanning .scan-icon::after { animation:ripple 1.4s ease-out infinite; }
+@keyframes ripple { 0%{inset:-2px;opacity:0.7} 100%{inset:-24px;opacity:0} }
+.success .scan-icon { background:rgba(34,197,94,0.08); border-color:rgba(34,197,94,0.25); }
+
+.scan-title { font-size:15px; font-weight:600; margin-bottom:4px; }
+.scan-sub   { font-size:13px; color:var(--text2); }
+
+/* LAST READ */
+.last-read {
+  background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.2);
+  border-radius:var(--r-sm); padding:12px 16px; margin-bottom:16px;
+  display:none; animation:fadeUp 0.3s ease both;
+}
+.last-read-label { font-size:11px; color:var(--ok); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:6px; }
+.last-read-name  { font-size:14px; font-weight:600; color:var(--text); }
+.last-read-serial { font-family:'DM Mono',monospace; font-size:12px; color:var(--text2); margin-top:2px; }
+
+/* SECTION TITLE */
+.section-title {
+  font-size:11px; font-weight:600; letter-spacing:0.1em;
+  text-transform:uppercase; color:var(--text3);
+  margin-bottom:10px; display:flex; align-items:center; gap:8px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--line); }
+
+/* LIST */
+.list { display:flex; flex-direction:column; gap:6px; margin-bottom:20px; }
+.list-empty {
+  background:var(--bg2); border:1px solid var(--line);
+  border-radius:var(--r); padding:32px 20px; text-align:center;
+  color:var(--text3); font-size:14px;
+}
+.list-empty span { display:block; font-size:32px; margin-bottom:10px; }
+
+.list-item {
+  background:var(--bg2); border:1px solid var(--line2);
+  border-radius:var(--r-sm); padding:12px 16px;
+  display:flex; align-items:center; gap:12px;
+  animation:fadeUp 0.25s ease both;
+}
+.item-num {
+  width:28px; height:28px; border-radius:50%;
+  background:var(--bg3); border:1px solid var(--line2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:600; color:var(--text3); flex-shrink:0;
+}
+.item-body { flex:1; min-width:0; }
+.item-name   { font-size:13px; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.item-serial { font-family:'DM Mono',monospace; font-size:11px; color:var(--text2); margin-top:2px; }
+.item-time   { font-size:10px; color:var(--text3); margin-top:2px; }
+.item-del {
+  width:28px; height:28px; border-radius:50%;
+  background:transparent; border:1px solid var(--line2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; cursor:pointer; flex-shrink:0; color:var(--text3);
+  transition:all 0.15s;
+}
+.item-del:hover { background:rgba(239,68,68,0.1); border-color:var(--err); color:var(--err); }
+
+/* BUTTONS */
+.btn-row { display:flex; gap:10px; margin-bottom:10px; }
+.btn {
+  flex:1; padding:14px 16px; border-radius:var(--r-sm); border:none;
+  font-family:'Outfit',sans-serif; font-size:14px; font-weight:600;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:7px;
+  transition:opacity 0.15s, transform 0.1s; letter-spacing:0.02em;
+}
+.btn:active { transform:scale(0.97); }
+.btn:disabled { opacity:0.35; cursor:not-allowed; transform:none; }
+.btn-primary   { background:var(--accent); color:#fff; }
+.btn-primary:not(:disabled):hover { opacity:0.88; }
+.btn-secondary { background:var(--bg3); color:var(--text2); border:1px solid var(--line2); }
+.btn-secondary:hover { border-color:var(--line3); color:var(--text); }
+.btn-ok  { background:var(--ok); color:#fff; }
+.btn-ok:not(:disabled):hover { opacity:0.88; }
+.btn-err { background:rgba(239,68,68,0.1); color:var(--err); border:1px solid rgba(239,68,68,0.2); }
+.btn-err:hover { background:rgba(239,68,68,0.18); }
+.btn-full { width:100%; flex:none; }
+
+/* INFO INPUT */
+.info-card {
+  background:var(--bg2); border:1px solid var(--line2);
+  border-radius:var(--r); padding:16px; margin-bottom:20px;
+}
+.info-label { font-size:12px; color:var(--text3); margin-bottom:6px; }
+.info-input {
+  width:100%; background:var(--bg3); border:1px solid var(--line2);
+  border-radius:var(--r-sm); padding:10px 14px;
+  font-family:'Outfit',sans-serif; font-size:14px; color:var(--text);
+  outline:none; transition:border-color 0.15s;
+}
+.info-input:focus { border-color:var(--accent); }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+  background:var(--bg3); border:1px solid var(--line2);
+  border-radius:999px; padding:12px 20px;
+  font-size:13px; font-weight:500;
+  display:flex; align-items:center; gap:8px;
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  z-index:999; white-space:nowrap; max-width:90vw;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+.toast.ok  { border-color:rgba(34,197,94,0.4); color:var(--ok); }
+.toast.err { border-color:rgba(239,68,68,0.4); color:var(--err); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">ARGA <span>NFC</span></div>
+    <div class="header-sub">Sevkiyat Listesi</div>
+  </div>
+  <a class="back-btn" href="index.html">← Ana Sayfa</a>
+</div>
+
+<div class="content">
+
+  <div class="page-header">
+    <div class="page-num">SEVKİYAT MODÜLÜ</div>
+    <div class="page-title">Ürün Okuma</div>
+    <div class="page-desc">NFC etiketleri sırayla okut, liste otomatik oluşsun.</div>
+  </div>
+
+  <!-- Sevkiyat bilgileri -->
+  <div class="info-card">
+    <div class="info-label">Sevkiyat / Müşteri Adı (opsiyonel)</div>
+    <input class="info-input" id="shipmentName" placeholder="Örn: ABC İnşaat — İstanbul Teslimatı">
+  </div>
+
+  <!-- İstatistik -->
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-val" id="totalCount">0</div>
+      <div class="stat-label">Toplam</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val ok" id="lastTime">—</div>
+      <div class="stat-label">Son okuma</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="productTypes">0</div>
+      <div class="stat-label">Ürün çeşidi</div>
+    </div>
+  </div>
+
+  <!-- Tarama alanı -->
+  <div class="scan-area" id="scanArea" onclick="startScan()">
+    <div class="scan-icon" id="scanIcon">📡</div>
+    <div class="scan-title" id="scanTitle">Etiketi okutmak için dokun</div>
+    <div class="scan-sub" id="scanSub">NFC etiketini telefona yaklaştır</div>
+  </div>
+
+  <!-- Son okunan -->
+  <div class="last-read" id="lastRead">
+    <div class="last-read-label">✓ Son okunan</div>
+    <div class="last-read-name"  id="lastName">—</div>
+    <div class="last-read-serial" id="lastSerial">—</div>
+  </div>
+
+  <!-- Liste -->
+  <div class="section-title">Okunan Ürünler</div>
+
+  <div class="list" id="itemList">
+    <div class="list-empty" id="emptyMsg">
+      <span>📦</span>
+      Henüz ürün okutulmadı.<br>Yukarıdaki alana dokunarak başla.
+    </div>
+  </div>
+
+  <!-- Aksiyonlar -->
+  <div class="btn-row">
+    <button class="btn btn-err" id="clearBtn" onclick="clearList()" disabled>🗑 Temizle</button>
+    <button class="btn btn-ok"  id="pdfBtn"   onclick="downloadPDF()" disabled>⬇ PDF İndir</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const BASE_URL = 'smyloc.com/rdifurunler/';
+let items = [];
+let scanning = false;
+let nfcReader = null;
+let scanActive = false;
+
+// ── URL'den ürün bilgisi parse et ──────────────────────────────────────────
+function parseNFCUrl(raw) {
+  // URL veya düz metin olabilir
+  let path = raw;
+  try {
+    const url = new URL(raw.startsWith('http') ? raw : 'https://' + raw);
+    path = url.pathname; // /rdifurunler/dragon-fast-comfort-ag050626001
+  } catch(e) {}
+
+  // /rdifurunler/ sonrasını al
+  const match = path.match(/rdifurunler\/(.+)/i);
+  if (!match) return null;
+
+  const slug = match[1]; // dragon-fast-comfort-ag050626001
+
+  // Seri no: sondaki büyük harf+rakam bloğu
+  const serialMatch = slug.match(/([a-z]{1,4}\d{5,})$/i);
+  if (!serialMatch) return null;
+
+  const serial = serialMatch[1].toUpperCase();
+  // Ürün adı: slug'dan seri noyu çıkar, tireleri boşluğa çevir, büyük harf
+  const productSlug = slug.slice(0, slug.length - serial.length - 1);
+  const productName = productSlug
+    .split('-')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
+  return { productName, serial, slug };
+}
+
+// ── NFC Tara ───────────────────────────────────────────────────────────────
+async function startScan() {
+  if (scanActive) return;
+
+  if (!('NDEFReader' in window)) {
+    showToast('❌ Web NFC bu tarayıcıda desteklenmiyor', 'err');
+    return;
+  }
+
+  scanActive = true;
+  const area  = document.getElementById('scanArea');
+  const icon  = document.getElementById('scanIcon');
+  const title = document.getElementById('scanTitle');
+  const sub   = document.getElementById('scanSub');
+
+  area.classList.add('scanning');
+  area.onclick = null;
+  icon.textContent  = '📡';
+  title.textContent = 'Etiketi yaklaştır...';
+  sub.textContent   = 'NFC okuma aktif';
+
+  try {
+    nfcReader = new NDEFReader();
+    await nfcReader.scan();
+
+    nfcReader.onreading = (event) => {
+      const decoder = new TextDecoder();
+      let raw = null;
+
+      for (const record of event.message.records) {
+        if (record.recordType === 'url' || record.recordType === 'text') {
+          raw = decoder.decode(record.data).trim();
+          break;
+        }
+      }
+
+      if (!raw) {
+        showToast('⚠️ Etiket içeriği okunamadı', 'err');
+        return;
+      }
+
+      const parsed = parseNFCUrl(raw);
+      if (!parsed) {
+        showToast('⚠️ Bu etiket Arga formatında değil', 'err');
+        return;
+      }
+
+      addItem(parsed);
+
+      area.classList.remove('scanning');
+      area.classList.add('success');
+      icon.textContent  = '✅';
+      title.textContent = 'Eklendi!';
+      sub.textContent   = parsed.productName + ' · ' + parsed.serial;
+
+      setTimeout(resetScanArea, 1800);
+    };
+
+    nfcReader.onreadingerror = () => {
+      showToast('⚠️ Okuma hatası, tekrar dene', 'err');
+      resetScanArea();
+    };
+
+  } catch(e) {
+    showToast('❌ NFC izni gerekli', 'err');
+    resetScanArea();
+  }
+}
+
+function resetScanArea() {
+  scanActive = false;
+  const area  = document.getElementById('scanArea');
+  const icon  = document.getElementById('scanIcon');
+  const title = document.getElementById('scanTitle');
+  const sub   = document.getElementById('scanSub');
+  area.className = 'scan-area';
+  area.onclick = startScan;
+  icon.textContent  = '📡';
+  title.textContent = 'Etiketi okutmak için dokun';
+  sub.textContent   = 'NFC etiketini telefona yaklaştır';
+}
+
+// ── Listeye ekle ───────────────────────────────────────────────────────────
+function addItem(parsed) {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+  const item = {
+    id: Date.now(),
+    productName: parsed.productName,
+    serial: parsed.serial,
+    time: timeStr,
+    date: now.toLocaleDateString('tr-TR'),
+  };
+  items.unshift(item); // en yeni üste
+
+  // Son okunan banner
+  document.getElementById('lastRead').style.display = 'block';
+  document.getElementById('lastName').textContent   = item.productName;
+  document.getElementById('lastSerial').textContent = item.serial + ' · ' + timeStr;
+
+  renderList();
+  updateStats();
+  showToast('✅ ' + item.productName + ' eklendi', 'ok');
+}
+
+function renderList() {
+  const list = document.getElementById('itemList');
+
+  if (items.length === 0) {
+    list.innerHTML = `<div class="list-empty" id="emptyMsg">
+      <span>📦</span>Henüz ürün okutulmadı.<br>Yukarıdaki alana dokunarak başla.
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = items.map((item, i) => `
+    <div class="list-item" id="item-${item.id}">
+      <div class="item-num">${items.length - i}</div>
+      <div class="item-body">
+        <div class="item-name">${item.productName}</div>
+        <div class="item-serial">${item.serial}</div>
+        <div class="item-time">${item.date} · ${item.time}</div>
+      </div>
+      <div class="item-del" onclick="removeItem(${item.id})" title="Kaldır">✕</div>
+    </div>
+  `).join('');
+
+  document.getElementById('clearBtn').disabled = false;
+  document.getElementById('pdfBtn').disabled   = false;
+}
+
+function updateStats() {
+  document.getElementById('totalCount').textContent = items.length;
+  const types = new Set(items.map(i => i.productName)).size;
+  document.getElementById('productTypes').textContent = types;
+  const last = items[0];
+  document.getElementById('lastTime').textContent = last ? last.time : '—';
+}
+
+function removeItem(id) {
+  items = items.filter(i => i.id !== id);
+  renderList();
+  updateStats();
+  if (items.length === 0) {
+    document.getElementById('lastRead').style.display = 'none';
+    document.getElementById('clearBtn').disabled = true;
+    document.getElementById('pdfBtn').disabled   = true;
+  }
+}
+
+function clearList() {
+  if (!confirm('Listeyi temizlemek istediğine emin misin?')) return;
+  items = [];
+  renderList();
+  updateStats();
+  document.getElementById('lastRead').style.display = 'none';
+  document.getElementById('clearBtn').disabled = true;
+  document.getElementById('pdfBtn').disabled   = true;
+  showToast('Liste temizlendi', '');
+}
+
+// ── PDF İndir ──────────────────────────────────────────────────────────────
+function downloadPDF() {
+  if (items.length === 0) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+
+  const shipment = document.getElementById('shipmentName').value.trim() || 'Sevkiyat Listesi';
+  const now = new Date().toLocaleDateString('tr-TR', {
+    day:'2-digit', month:'long', year:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+
+  const pageW = 210;
+  const margin = 16;
+  let y = margin;
+
+  // ── Başlık ──
+  doc.setFillColor(249, 115, 22);
+  doc.rect(0, 0, pageW, 28, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.text('ARGA SAFETY', margin, 12);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Sevkiyat Listesi', margin, 20);
+  doc.setFontSize(9);
+  doc.text(now, pageW - margin, 20, { align:'right' });
+  y = 36;
+
+  // ── Sevkiyat adı ──
+  doc.setTextColor(30, 37, 53);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(shipment, margin, y);
+  y += 6;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Toplam ' + items.length + ' ürün · ' + new Set(items.map(i=>i.productName)).size + ' çeşit', margin, y);
+  y += 10;
+
+  // ── Tablo başlığı ──
+  doc.setFillColor(30, 37, 53);
+  doc.rect(margin, y, pageW - margin * 2, 8, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text('#',     margin + 3, y + 5.5);
+  doc.text('ÜRÜN ADI',          margin + 12, y + 5.5);
+  doc.text('SERİ NUMARASI',     margin + 110, y + 5.5);
+  doc.text('SAAT',              margin + 155, y + 5.5);
+  y += 8;
+
+  // ── Tablo satırları ──
+  [...items].reverse().forEach((item, i) => {
+    if (y > 270) {
+      doc.addPage();
+      y = margin;
+    }
+    const rowH = 8;
+    const bg = i % 2 === 0 ? [248, 250, 252] : [255, 255, 255];
+    doc.setFillColor(...bg);
+    doc.rect(margin, y, pageW - margin * 2, rowH, 'F');
+
+    // Kenarlık
+    doc.setDrawColor(226, 232, 240);
+    doc.rect(margin, y, pageW - margin * 2, rowH, 'S');
+
+    doc.setTextColor(30, 37, 53);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(String(i + 1),   margin + 3,   y + 5.5);
+    doc.text(item.productName.substring(0, 40), margin + 12, y + 5.5);
+    doc.setFont('courier', 'normal');
+    doc.text(item.serial,     margin + 110, y + 5.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139);
+    doc.text(item.time,       margin + 155, y + 5.5);
+    y += rowH;
+  });
+
+  // ── Alt bilgi ──
+  y += 10;
+  doc.setFontSize(8);
+  doc.setTextColor(150, 160, 180);
+  doc.setFont('helvetica', 'italic');
+  doc.text('Bu belge Arga Safety NFC Sistemi tarafından oluşturulmuştur.', margin, y);
+
+  // ── İmza alanları ──
+  y += 14;
+  doc.setTextColor(30, 37, 53);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  const sigW = (pageW - margin * 2 - 10) / 2;
+  doc.rect(margin, y, sigW, 20);
+  doc.rect(margin + sigW + 10, y, sigW, 20);
+  doc.text('Hazırlayan:', margin + 3, y + 5);
+  doc.text('Onaylayan:',  margin + sigW + 13, y + 5);
+
+  const fileName = shipment.replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ ]/g, '').trim() + '_' +
+    new Date().toLocaleDateString('tr-TR').replace(/\./g, '-') + '.pdf';
+  doc.save(fileName);
+  showToast('✅ PDF indirildi', 'ok');
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
