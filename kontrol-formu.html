@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#f8f6f1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Kontrol Formu — Arga Safety</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f8f6f1;
+  --bg2:      #ffffff;
+  --bg3:      #f0ede6;
+  --line:     #e2ddd5;
+  --line2:    #ccc8bf;
+  --accent:   #c8341a;
+  --accent2:  #e04528;
+  --dark:     #1a1a1a;
+  --dark2:    #2d2d2d;
+  --text:     #1a1a1a;
+  --text2:    #5a5550;
+  --text3:    #9a9590;
+  --ok:       #2d7a3a;
+  --err:      #c8341a;
+  --r:        10px;
+  --r-sm:     6px;
+  --shadow:   0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html { background:var(--bg); }
+body {
+  font-family:'Outfit',sans-serif;
+  background:var(--bg); color:var(--text);
+  min-height:100svh; max-width:480px; margin:0 auto;
+  padding-bottom:60px;
+}
+
+/* ── HEADER ── */
+.header {
+  background:var(--dark);
+  padding:16px 20px;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:99;
+}
+.header-left { display:flex; align-items:center; gap:12px; }
+.logo-mark {
+  width:36px; height:36px;
+  background:var(--accent); border-radius:4px;
+  display:flex; align-items:center; justify-content:center;
+}
+.logo-mark svg { width:20px; height:20px; fill:#fff; }
+.header-title { font-family:'DM Serif Display',serif; font-size:15px; color:#fff; line-height:1.2; }
+.header-sub { font-size:11px; color:rgba(255,255,255,0.45); margin-top:1px; letter-spacing:0.04em; }
+.back-btn {
+  font-size:12px; color:rgba(255,255,255,0.5);
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
+  padding:6px 12px; border-radius:999px; text-decoration:none;
+  transition:all 0.15s;
+}
+.back-btn:hover { color:#fff; background:rgba(255,255,255,0.15); }
+
+/* ── PROGRESS ── */
+.progress-bar {
+  height:3px; background:var(--line);
+  position:sticky; top:60px; z-index:98;
+}
+.progress-fill {
+  height:100%; background:var(--accent);
+  transition:width 0.4s ease; width:0%;
+}
+
+/* ── SECTIONS ── */
+.section {
+  margin:16px 16px 0;
+  background:var(--bg2);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.section-head {
+  padding:12px 16px;
+  background:var(--dark);
+  display:flex; align-items:center; gap:10px;
+}
+.section-num {
+  width:22px; height:22px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  font-size:11px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.section-title {
+  font-family:'DM Serif Display',serif;
+  font-size:14px; color:#fff; letter-spacing:0.02em;
+}
+.section-body { padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+
+/* ── FORM FIELDS ── */
+.field { display:flex; flex-direction:column; gap:4px; }
+.field-row { display:grid; gap:10px; }
+.field-row.col2 { grid-template-columns:1fr 1fr; }
+.field-row.col3 { grid-template-columns:1fr 1fr 1fr; }
+
+label {
+  font-size:11px; font-weight:500; color:var(--text3);
+  text-transform:uppercase; letter-spacing:0.07em;
+}
+input[type=text], input[type=date], input[type=email], textarea, select {
+  width:100%;
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+  padding:9px 12px;
+  font-family:'Outfit',sans-serif;
+  font-size:14px; color:var(--text);
+  outline:none; transition:border-color 0.15s;
+  appearance:none; -webkit-appearance:none;
+}
+input[type=text]:focus, input[type=date]:focus,
+input[type=email]:focus, textarea:focus, select:focus {
+  border-color:var(--accent);
+}
+textarea { resize:vertical; min-height:64px; line-height:1.5; }
+.static-val {
+  padding:9px 12px;
+  background:var(--bg3);
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+  font-size:14px; color:var(--text2);
+  font-family:'DM Mono',monospace;
+}
+
+/* ── SERİ NO ÇOKLU ── */
+.serial-list { display:flex; flex-direction:column; gap:6px; }
+.serial-item {
+  display:flex; gap:8px; align-items:center;
+}
+.serial-item input { flex:1; }
+.serial-del {
+  width:32px; height:32px; border-radius:50%;
+  background:transparent; border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; cursor:pointer; color:var(--text3);
+  transition:all 0.15s; flex-shrink:0;
+}
+.serial-del:hover { background:rgba(200,52,26,0.08); border-color:var(--err); color:var(--err); }
+.add-serial-btn {
+  display:flex; align-items:center; gap:6px;
+  font-size:13px; color:var(--accent);
+  background:none; border:1px dashed var(--accent);
+  border-radius:var(--r-sm); padding:8px 12px;
+  cursor:pointer; transition:all 0.15s; font-family:'Outfit',sans-serif;
+}
+.add-serial-btn:hover { background:rgba(200,52,26,0.05); }
+
+/* ── KONTROL TABLOSU ── */
+.control-table { width:100%; border-collapse:collapse; font-size:13px; }
+.control-table th {
+  background:var(--bg3); padding:8px 10px;
+  text-align:left; font-size:10px; font-weight:600;
+  color:var(--text3); text-transform:uppercase; letter-spacing:0.07em;
+  border-bottom:1px solid var(--line);
+}
+.control-table th.center { text-align:center; }
+.control-table td {
+  padding:8px 10px; border-bottom:1px solid var(--line);
+  vertical-align:middle;
+}
+.control-table tr:last-child td { border-bottom:none; }
+.control-table tr:nth-child(even) td { background:var(--bg3); }
+.part-name { font-size:13px; color:var(--text); }
+.num-input {
+  width:64px; padding:5px 8px; text-align:center;
+  font-family:'DM Mono',monospace; font-size:13px;
+  background:var(--bg2); border:1px solid var(--line);
+  border-radius:var(--r-sm); outline:none;
+  transition:border-color 0.15s;
+}
+.num-input:focus { border-color:var(--accent); }
+
+/* Checkbox styled */
+.cb-wrap { display:flex; align-items:center; justify-content:center; gap:0; }
+.cb-group { display:flex; gap:6px; justify-content:center; }
+.cb-label {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  cursor:pointer; font-size:9px; color:var(--text3);
+  text-transform:uppercase; letter-spacing:0.05em;
+}
+.cb-label input[type=checkbox] { display:none; }
+.cb-box {
+  width:22px; height:22px; border-radius:4px;
+  border:1.5px solid var(--line2);
+  background:var(--bg2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; transition:all 0.15s;
+}
+.cb-label input:checked + .cb-box {
+  background:var(--ok); border-color:var(--ok); color:#fff;
+}
+.cb-label input:checked + .cb-box::after { content:'✓'; color:#fff; font-weight:700; font-size:13px; }
+
+/* ── ÇİZİM ALANI ── */
+.canvas-wrap {
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+  overflow:hidden; position:relative;
+  background:#fff;
+  touch-action:none;
+}
+#drawCanvas {
+  display:block; width:100%; cursor:crosshair;
+  touch-action:none;
+}
+.canvas-toolbar {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px;
+  background:var(--bg3); border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
+}
+.tool-btn {
+  padding:5px 10px; border-radius:var(--r-sm);
+  border:1px solid var(--line2); background:var(--bg2);
+  font-size:12px; cursor:pointer; color:var(--text2);
+  font-family:'Outfit',sans-serif; transition:all 0.12s;
+}
+.tool-btn:hover { border-color:var(--accent); color:var(--accent); }
+.tool-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+.color-swatch {
+  width:22px; height:22px; border-radius:50%;
+  border:2px solid transparent; cursor:pointer;
+  transition:border-color 0.12s;
+}
+.color-swatch.active { border-color:var(--dark); }
+.size-select {
+  padding:4px 8px; border-radius:var(--r-sm);
+  border:1px solid var(--line2); background:var(--bg2);
+  font-size:12px; color:var(--text2); cursor:pointer;
+}
+.canvas-hint {
+  font-size:11px; color:var(--text3); padding:6px 12px;
+  background:var(--bg3); border-top:1px solid var(--line);
+  text-align:center;
+}
+
+/* ── KARAR ── */
+.karar-row { display:flex; gap:12px; }
+.karar-btn {
+  flex:1; padding:14px 10px;
+  border:2px solid var(--line);
+  border-radius:var(--r); background:var(--bg2);
+  font-family:'DM Serif Display',serif;
+  font-size:16px; cursor:pointer; text-align:center;
+  transition:all 0.2s; color:var(--text2);
+}
+.karar-btn:hover { border-color:var(--line2); }
+.karar-btn.selected-ok {
+  border-color:var(--ok); background:rgba(45,122,58,0.06);
+  color:var(--ok);
+}
+.karar-btn.selected-err {
+  border-color:var(--err); background:rgba(200,52,26,0.06);
+  color:var(--err);
+}
+.karar-icon { font-size:24px; display:block; margin-bottom:4px; }
+.karar-label { font-size:13px; }
+
+/* ── İMZA ── */
+.imza-wrap {
+  border:1px solid var(--line); border-radius:var(--r-sm);
+  overflow:hidden; background:#fff; position:relative;
+}
+.imza-label-bar {
+  padding:7px 12px;
+  background:var(--bg3); border-bottom:1px solid var(--line);
+  font-size:11px; color:var(--text3); text-transform:uppercase;
+  letter-spacing:0.07em; display:flex; justify-content:space-between;
+  align-items:center;
+}
+.imza-clear {
+  font-size:11px; color:var(--accent); cursor:pointer;
+  background:none; border:none; font-family:'Outfit',sans-serif;
+  padding:0;
+}
+canvas.imza-canvas {
+  display:block; width:100%; height:110px;
+  touch-action:none; cursor:crosshair;
+  background:#fff;
+}
+
+/* ── BUTTONS ── */
+.bottom-bar {
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:480px;
+  padding:12px 16px;
+  background:rgba(248,246,241,0.95);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  display:flex; gap:10px; z-index:98;
+}
+.btn {
+  flex:1; padding:13px 10px; border-radius:var(--r);
+  font-family:'Outfit',sans-serif; font-size:14px; font-weight:600;
+  cursor:pointer; display:flex; align-items:center;
+  justify-content:center; gap:7px; border:none;
+  transition:all 0.15s; letter-spacing:0.02em;
+}
+.btn:active { transform:scale(0.97); }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:var(--accent2); }
+.btn-secondary {
+  background:var(--bg3); color:var(--text2);
+  border:1px solid var(--line2);
+}
+.btn-secondary:hover { border-color:var(--line2); color:var(--text); }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(40px);
+  background:var(--dark); color:#fff; border-radius:999px;
+  padding:11px 20px; font-size:13px; font-weight:500;
+  opacity:0; transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  z-index:999; white-space:nowrap; max-width:90vw;
+  box-shadow:0 8px 32px rgba(0,0,0,0.25);
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.ok  { background:var(--ok); }
+.toast.err { background:var(--err); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div>
+      <div class="header-title">Kontrol Formu</div>
+      <div class="header-sub">Aron Yatay Yaşam Hattı</div>
+    </div>
+  </div>
+  <a class="back-btn" href="nfc-yaz.html">← Geri</a>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<!-- 1. KULLANICI BİLGİLERİ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">1</div>
+    <div class="section-title">Kullanıcı Bilgileri</div>
+  </div>
+  <div class="section-body">
+    <div class="field">
+      <label>Firma</label>
+      <input type="text" id="firma" placeholder="Müşteri firma adı">
+    </div>
+    <div class="field">
+      <label>Adres</label>
+      <input type="text" id="adres" placeholder="Firma adresi">
+    </div>
+    <div class="field-row col2">
+      <div class="field">
+        <label>Bina Adı</label>
+        <input type="text" id="binaAdi" placeholder="Bina / Yapı adı">
+      </div>
+      <div class="field">
+        <label>Lokasyon</label>
+        <input type="text" id="lokasyon" placeholder="Lokasyon">
+      </div>
+    </div>
+    <div class="field">
+      <label>Bina Adresi</label>
+      <input type="text" id="binaAdres" placeholder="Kurulum yapılan bina adresi">
+    </div>
+    <div class="field-row col2">
+      <div class="field">
+        <label>Yapı Tipi</label>
+        <input type="text" id="yapiTipi" placeholder="Örn: Sandviç Panel">
+      </div>
+      <div class="field">
+        <label>Sipariş No</label>
+        <input type="text" id="siparisNo" placeholder="Sipariş no">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. YAŞAM HATTI BİLGİLERİ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">2</div>
+    <div class="section-title">Yaşam Hattı Bilgileri</div>
+  </div>
+  <div class="section-body">
+    <div class="field-row col2">
+      <div class="field">
+        <label>Üretici / Marka</label>
+        <div class="static-val">ARGA SAFETY</div>
+      </div>
+      <div class="field">
+        <label>Model</label>
+        <input type="text" id="model" placeholder="Örn: ARON">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Seri Numara(ları)</label>
+      <div class="serial-list" id="serialList">
+        <div class="serial-item">
+          <input type="text" placeholder="Seri no gir..." class="serial-input">
+        </div>
+      </div>
+      <button class="add-serial-btn" onclick="addSerial()">+ Seri no ekle</button>
+    </div>
+
+    <div class="field">
+      <label>Montaj Tarihi</label>
+      <input type="date" id="montajTarihi">
+    </div>
+  </div>
+</div>
+
+<!-- 3. KURULUM BİLGİLERİ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">3</div>
+    <div class="section-title">Kurulum Bilgileri</div>
+  </div>
+  <div class="section-body">
+    <div class="field">
+      <label>Kurulumu Yapan Firma</label>
+      <div class="static-val">ARGA İŞ GÜVENLİĞİ VE ENDÜSTRİYEL ÜRÜNLER A.Ş.</div>
+    </div>
+    <div class="field-row col2">
+      <div class="field">
+        <label>Kurulum Şefi Ad-Soyad</label>
+        <input type="text" id="kurulumSefi" placeholder="Ad Soyad">
+      </div>
+      <div class="field">
+        <label>Kurulumcu-2 Ad-Soyad</label>
+        <input type="text" id="kurulumcu2" placeholder="Ad Soyad">
+      </div>
+    </div>
+    <div class="field">
+      <label>Kurulumcu-2 Cep</label>
+      <input type="text" id="kurulumcu2Tel" placeholder="Telefon no">
+    </div>
+  </div>
+</div>
+
+<!-- 4. YAPI BİLEŞENİ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">4</div>
+    <div class="section-title">Yapı Bileşeni</div>
+  </div>
+  <div class="section-body">
+    <div class="field-row col2">
+      <div class="field">
+        <label>Bileşen 1</label>
+        <input type="text" id="bilesen1" placeholder="Bileşen adı">
+      </div>
+      <div class="field">
+        <label>Kalınlık (En az)</label>
+        <input type="text" id="kalinlik1" placeholder="mm">
+      </div>
+    </div>
+    <div class="field-row col2">
+      <div class="field">
+        <label>Bileşen 2</label>
+        <input type="text" id="bilesen2" placeholder="Bileşen adı">
+      </div>
+      <div class="field">
+        <label>Kalınlık (En çok)</label>
+        <input type="text" id="kalinlik2" placeholder="mm">
+      </div>
+    </div>
+    <div class="field-row col2">
+      <div class="field">
+        <label>Bina Yapısı</label>
+        <input type="text" id="binaYapisi" placeholder="Yapı tipi">
+      </div>
+      <div class="field">
+        <label>Kalite</label>
+        <input type="text" id="kalite" placeholder="Kalite">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. KULLANIM TARİHÇESİ -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">5</div>
+    <div class="section-title">Kullanım Tarihçesi</div>
+  </div>
+  <div class="section-body">
+    <div class="field">
+      <label>Yaşam Hattı Kondisyonu</label>
+      <textarea id="kondisyon" placeholder="Örn: İlk kullanım, bir düşüş yaşanıp yaşanmadığı vb."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 6. KONTROL PARÇALARI -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">6</div>
+    <div class="section-title">Kontrol Parçaları</div>
+  </div>
+  <div class="section-body" style="padding:0;">
+    <table class="control-table" id="controlTable">
+      <thead>
+        <tr>
+          <th>Malzeme Adı</th>
+          <th class="center">Miktar</th>
+          <th class="center">Birim</th>
+          <th class="center">Kullanım<br>Durumu</th>
+        </tr>
+      </thead>
+      <tbody id="controlBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 7. YORUMLAR -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">7</div>
+    <div class="section-title">Yorumlar</div>
+  </div>
+  <div class="section-body">
+    <div class="field">
+      <textarea id="yorumlar" style="min-height:90px" placeholder="Varsa ek notlar, gözlemler..."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 8. ÇİZİM ALANI -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">8</div>
+    <div class="section-title">Bina Yerleşimi & Kurulum Şeması</div>
+  </div>
+  <div class="section-body" style="padding:0;">
+    <div class="canvas-wrap">
+      <div class="canvas-toolbar">
+        <button class="tool-btn active" id="toolPen"   onclick="setTool('pen')">✏️ Kalem</button>
+        <button class="tool-btn"        id="toolLine"  onclick="setTool('line')">— Çizgi</button>
+        <button class="tool-btn"        id="toolText"  onclick="setTool('text')">T Metin</button>
+        <button class="tool-btn"        id="toolErase" onclick="setTool('erase')">⌫ Sil</button>
+        <div style="width:1px;height:20px;background:var(--line);margin:0 2px;"></div>
+        <div class="color-swatch active" style="background:#1a1a1a" onclick="setColor('#1a1a1a',this)" data-c="#1a1a1a"></div>
+        <div class="color-swatch" style="background:#c8341a" onclick="setColor('#c8341a',this)" data-c="#c8341a"></div>
+        <div class="color-swatch" style="background:#2d7a3a" onclick="setColor('#2d7a3a',this)" data-c="#2d7a3a"></div>
+        <div class="color-swatch" style="background:#1a5fa5" onclick="setColor('#1a5fa5',this)" data-c="#1a5fa5"></div>
+        <select class="size-select" id="brushSize" onchange="setBrush(this.value)">
+          <option value="2">İnce</option>
+          <option value="4" selected>Normal</option>
+          <option value="8">Kalın</option>
+        </select>
+        <button class="tool-btn" onclick="clearCanvas()" style="margin-left:auto;">🗑 Temizle</button>
+      </div>
+      <canvas id="drawCanvas" height="280"></canvas>
+      <div class="canvas-hint" id="canvasHint">Parmağınızla veya stylus ile çizin</div>
+    </div>
+  </div>
+</div>
+
+<!-- 9. KARAR -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">9</div>
+    <div class="section-title">Karar</div>
+  </div>
+  <div class="section-body">
+    <div class="karar-row">
+      <button class="karar-btn" id="kararOk"  onclick="setKarar('ok')">
+        <span class="karar-icon">✅</span>
+        <span class="karar-label">Kullanılabilir</span>
+      </button>
+      <button class="karar-btn" id="kararErr" onclick="setKarar('err')">
+        <span class="karar-icon">❌</span>
+        <span class="karar-label">Kullanılamaz</span>
+      </button>
+    </div>
+    <div class="field-row col2">
+      <div class="field">
+        <label>Montaj / Kontrol Tarihi</label>
+        <input type="date" id="kontrolTarihi">
+      </div>
+      <div class="field">
+        <label>Sonraki Kontrol Tarihi</label>
+        <input type="date" id="sonrakiTarih">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10. İMZALAR -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">10</div>
+    <div class="section-title">İmzalar</div>
+  </div>
+  <div class="section-body">
+    <div class="field-row col2">
+      <div class="field">
+        <label>Teslim Eden Ad-Soyad / Görevi</label>
+        <input type="text" id="teslimEdenAd" placeholder="Ad Soyad — Görev">
+      </div>
+      <div class="field">
+        <label>Teslim Alan Ad-Soyad / Görevi</label>
+        <input type="text" id="teslimAlanAd" placeholder="Ad Soyad — Görev">
+      </div>
+    </div>
+    <div class="field-row col2">
+      <div class="field">
+        <div class="imza-wrap">
+          <div class="imza-label-bar">
+            Teslim Eden İmzası
+            <button class="imza-clear" onclick="clearImza('imza1')">Temizle</button>
+          </div>
+          <canvas class="imza-canvas" id="imza1"></canvas>
+        </div>
+      </div>
+      <div class="field">
+        <div class="imza-wrap">
+          <div class="imza-label-bar">
+            Teslim Alan İmzası
+            <button class="imza-clear" onclick="clearImza('imza2')">Temizle</button>
+          </div>
+          <canvas class="imza-canvas" id="imza2"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height:16px;"></div>
+
+<div class="bottom-bar">
+  <button class="btn btn-secondary" onclick="saveDraft()">💾 Taslak</button>
+  <button class="btn btn-primary"   onclick="generatePDF()">📄 PDF Oluştur</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+
+// ── KONTROL PARÇAları ──────────────────────────────────────────────────────
+const PARTS = [
+  { name:'Ankraj Dikmesi / Plakası', birim:'Adet' },
+  { name:'Perçin',                   birim:'Adet' },
+  { name:'Ana Braket',               birim:'Adet' },
+  { name:'Gerdirme & İndikatör',     birim:'Adet' },
+  { name:'Şok Emici',                birim:'Adet' },
+  { name:'Sonlandırma',              birim:'Adet' },
+  { name:'Ara Braket',               birim:'Adet' },
+  { name:'Köşe Braketi 90 Derece',   birim:'Adet' },
+  { name:'Son Ana Braket',           birim:'Adet' },
+  { name:'mm Paslanmaz çelik halat', birim:'Metre' },
+  { name:'Şaryo',                    birim:'Adet' },
+];
+
+function buildTable() {
+  const tbody = document.getElementById('controlBody');
+  tbody.innerHTML = PARTS.map((p, i) => `
+    <tr>
+      <td class="part-name">${p.name}</td>
+      <td style="text-align:center">
+        <input type="text" class="num-input" id="qty${i}" placeholder="—">
+      </td>
+      <td style="text-align:center;font-size:12px;color:var(--text3)">${p.birim}</td>
+      <td>
+        <div class="cb-wrap">
+          <label class="cb-label">
+            <input type="checkbox" id="ok${i}">
+            <div class="cb-box"></div>
+          </label>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ── SERİ NO ────────────────────────────────────────────────────────────────
+function addSerial() {
+  const list = document.getElementById('serialList');
+  const item = document.createElement('div');
+  item.className = 'serial-item';
+  item.innerHTML = `
+    <input type="text" class="serial-input" placeholder="Seri no gir...">
+    <button class="serial-del" onclick="this.parentElement.remove()">✕</button>
+  `;
+  list.appendChild(item);
+  item.querySelector('input').focus();
+}
+
+function getSerials() {
+  return [...document.querySelectorAll('.serial-input')]
+    .map(i => i.value.trim()).filter(Boolean);
+}
+
+// ── KARAR ──────────────────────────────────────────────────────────────────
+let karar = null;
+function setKarar(type) {
+  karar = type;
+  document.getElementById('kararOk').className  = 'karar-btn' + (type==='ok'  ? ' selected-ok'  : '');
+  document.getElementById('kararErr').className = 'karar-btn' + (type==='err' ? ' selected-err' : '');
+}
+
+// ── ÇİZİM CANVAS ──────────────────────────────────────────────────────────
+let tool = 'pen', color = '#1a1a1a', brushSize = 4;
+let drawing = false, lastX = 0, lastY = 0;
+let lineStart = null;
+let drawHistory = [];
+let drawCtx, drawCanvas;
+
+function initDrawCanvas() {
+  drawCanvas = document.getElementById('drawCanvas');
+  drawCtx = drawCanvas.getContext('2d');
+  const w = drawCanvas.offsetWidth;
+  drawCanvas.width  = w * window.devicePixelRatio;
+  drawCanvas.height = 280 * window.devicePixelRatio;
+  drawCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  drawCanvas.style.height = '280px';
+  drawCtx.strokeStyle = color;
+  drawCtx.lineWidth = brushSize;
+  drawCtx.lineCap = 'round';
+  drawCtx.lineJoin = 'round';
+
+  drawCanvas.addEventListener('pointerdown', onPointerDown);
+  drawCanvas.addEventListener('pointermove', onPointerMove);
+  drawCanvas.addEventListener('pointerup',   onPointerUp);
+  drawCanvas.addEventListener('pointerleave',onPointerUp);
+}
+
+function getPos(e) {
+  const r = drawCanvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+function onPointerDown(e) {
+  e.preventDefault();
+  drawing = true;
+  const pos = getPos(e);
+  lastX = pos.x; lastY = pos.y;
+  lineStart = { x:pos.x, y:pos.y };
+  drawHistory.push(drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height));
+  if (tool === 'text') {
+    drawing = false;
+    const txt = prompt('Metin gir:');
+    if (txt) {
+      drawCtx.fillStyle = color;
+      drawCtx.font = `${brushSize * 3 + 8}px Outfit`;
+      drawCtx.fillText(txt, pos.x, pos.y);
+    }
+  }
+}
+
+function onPointerMove(e) {
+  if (!drawing) return;
+  e.preventDefault();
+  const pos = getPos(e);
+  drawCtx.strokeStyle = tool === 'erase' ? '#ffffff' : color;
+  drawCtx.lineWidth   = tool === 'erase' ? brushSize * 4 : brushSize;
+
+  if (tool === 'line') {
+    drawCtx.putImageData(drawHistory[drawHistory.length-1], 0, 0);
+    drawCtx.beginPath();
+    drawCtx.moveTo(lineStart.x, lineStart.y);
+    drawCtx.lineTo(pos.x, pos.y);
+    drawCtx.stroke();
+  } else {
+    drawCtx.beginPath();
+    drawCtx.moveTo(lastX, lastY);
+    drawCtx.lineTo(pos.x, pos.y);
+    drawCtx.stroke();
+    lastX = pos.x; lastY = pos.y;
+  }
+}
+
+function onPointerUp(e) {
+  drawing = false;
+  lineStart = null;
+}
+
+function setTool(t) {
+  tool = t;
+  ['pen','line','text','erase'].forEach(n => {
+    document.getElementById('tool'+n.charAt(0).toUpperCase()+n.slice(1))
+      .classList.toggle('active', n === t);
+  });
+  document.getElementById('canvasHint').textContent =
+    t === 'erase' ? 'Silmek için üzerine sürün' :
+    t === 'line'  ? 'Başlangıç noktasından bitiş noktasına sürün' :
+    t === 'text'  ? 'Metin eklemek için tıklayın' :
+    'Parmağınızla veya stylus ile çizin';
+}
+function setColor(c, el) {
+  color = c;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+}
+function setBrush(v) { brushSize = parseInt(v); }
+function clearCanvas() {
+  if (!confirm('Çizimi temizlemek istiyor musun?')) return;
+  drawCtx.clearRect(0,0,drawCanvas.width/window.devicePixelRatio, drawCanvas.height/window.devicePixelRatio);
+  drawHistory = [];
+}
+
+// ── İMZA CANVAS ───────────────────────────────────────────────────────────
+function initImzaCanvas(id) {
+  const canvas = document.getElementById(id);
+  const ctx = canvas.getContext('2d');
+  const w = canvas.offsetWidth;
+  canvas.width  = w * window.devicePixelRatio;
+  canvas.height = 110 * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  canvas.style.height = '110px';
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  let drawing = false, lx = 0, ly = 0;
+  canvas.addEventListener('pointerdown', e => {
+    e.preventDefault(); drawing = true;
+    const r = canvas.getBoundingClientRect();
+    lx = e.clientX - r.left; ly = e.clientY - r.top;
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!drawing) return; e.preventDefault();
+    const r = canvas.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(x,y); ctx.stroke();
+    lx = x; ly = y;
+  });
+  canvas.addEventListener('pointerup',    () => drawing = false);
+  canvas.addEventListener('pointerleave', () => drawing = false);
+}
+
+function clearImza(id) {
+  const c = document.getElementById(id);
+  c.getContext('2d').clearRect(0,0,c.width,c.height);
+}
+
+function isImzaEmpty(id) {
+  const c = document.getElementById(id);
+  const d = c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+  return !d.some(v => v !== 0);
+}
+
+// ── PROGRESS ──────────────────────────────────────────────────────────────
+function updateProgress() {
+  const fields = document.querySelectorAll('input[type=text], input[type=date], textarea');
+  let filled = 0;
+  fields.forEach(f => { if (f.value.trim()) filled++; });
+  const pct = Math.min(100, Math.round((filled / fields.length) * 100));
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+document.addEventListener('input', updateProgress);
+
+// ── TASLAK KAYDET ─────────────────────────────────────────────────────────
+function saveDraft() {
+  const data = {
+    firma: document.getElementById('firma').value,
+    adres: document.getElementById('adres').value,
+    model: document.getElementById('model').value,
+    serials: getSerials(),
+    karar,
+    savedAt: new Date().toISOString(),
+  };
+  localStorage.setItem('arga_form_draft', JSON.stringify(data));
+  showToast('✓ Taslak kaydedildi', 'ok');
+}
+
+function loadDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem('arga_form_draft'));
+    if (!d) return;
+    if (d.firma) document.getElementById('firma').value = d.firma;
+    if (d.adres) document.getElementById('adres').value = d.adres;
+    if (d.model) document.getElementById('model').value = d.model;
+  } catch(e) {}
+}
+
+// ── PDF OLUŞTUR ───────────────────────────────────────────────────────────
+async function generatePDF() {
+  showToast('⏳ PDF hazırlanıyor...', '');
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+
+  const pW = 210, pH = 297;
+  const ml = 14, mr = 14;
+  const cW = pW - ml - mr;
+  let y = 0;
+
+  // ── Başlık ──
+  doc.setFillColor(26, 26, 26);
+  doc.rect(0, 0, pW, 22, 'F');
+  doc.setFillColor(200, 52, 26);
+  doc.rect(0, 0, 6, 22, 'F');
+
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text('ARGA SAFETY', ml + 2, 9);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text('ARON YATAY YAŞAM HATTI — TESLİM / YILLIK PERİYODİK KONTROL FORMU', ml + 2, 16);
+  doc.setFont('helvetica','italic'); doc.setFontSize(7.5);
+  doc.setTextColor(180,180,180);
+  doc.text('EN795:2012 Type C  |  CEN TS 16415:2013 Type C', pW - mr, 16, { align:'right' });
+  y = 28;
+
+  function sectionHeader(title) {
+    doc.setFillColor(45, 45, 45);
+    doc.rect(ml, y, cW, 6, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8);
+    doc.text(title.toUpperCase(), ml + 3, y + 4.2);
+    y += 6;
+  }
+
+  function twoCol(rows) {
+    const colW = cW / 2;
+    rows.forEach(([l1,v1,l2,v2]) => {
+      doc.setFillColor(248,246,241);
+      doc.rect(ml, y, cW, 7, 'F');
+      doc.setDrawColor(220,215,208);
+      doc.rect(ml, y, cW, 7, 'S');
+      doc.setTextColor(120,115,110); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+      doc.text(l1, ml+2, y+3);
+      doc.setTextColor(26,26,26); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+      doc.text(v1||'—', ml+2, y+6);
+      if (l2 !== undefined) {
+        doc.setTextColor(120,115,110); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+        doc.text(l2, ml+colW+2, y+3);
+        doc.setTextColor(26,26,26); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+        doc.text(v2||'—', ml+colW+2, y+6);
+      }
+      y += 7;
+    });
+  }
+
+  function oneCol(label, value, h=7) {
+    doc.setFillColor(248,246,241);
+    doc.rect(ml, y, cW, h, 'F');
+    doc.setDrawColor(220,215,208);
+    doc.rect(ml, y, cW, h, 'S');
+    doc.setTextColor(120,115,110); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+    doc.text(label, ml+2, y+3);
+    doc.setTextColor(26,26,26); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+    const lines = doc.splitTextToSize(value||'—', cW-4);
+    lines.forEach((ln, i) => doc.text(ln, ml+2, y+6+(i*4)));
+    y += h;
+  }
+
+  // 1. Kullanıcı + Ürün Bilgileri
+  sectionHeader('Kullanıcı Bilgileri');
+  twoCol([
+    ['Firma', document.getElementById('firma').value,
+     'Üretici / Ticari Marka', 'ARGA SAFETY'],
+    ['Adres', document.getElementById('adres').value,
+     'Model', document.getElementById('model').value],
+    ['', '',
+     'Seri No', getSerials().join(' — ') || '—'],
+    ['Bina Adı / Lokasyon', (document.getElementById('binaAdi').value||'') + (document.getElementById('lokasyon').value ? ' / '+document.getElementById('lokasyon').value : ''),
+     'Montaj Tarihi', document.getElementById('montajTarihi').value||'—'],
+    ['Bina Adresi', document.getElementById('binaAdres').value,
+     'Sipariş No', document.getElementById('siparisNo').value],
+    ['Yapı Tipi', document.getElementById('yapiTipi').value, '', ''],
+  ]);
+  y += 2;
+
+  // 2. Kurulum
+  sectionHeader('Kurulum Bilgileri');
+  twoCol([
+    ['Kurulumu Yapan Firma', 'ARGA İŞ GÜVENLİĞİ VE ENDÜSTRİYEL ÜRÜNLER A.Ş.', '', ''],
+    ['Kurulum Şefi Ad-Soyad', document.getElementById('kurulumSefi').value,
+     'Kurulumcu-2 Ad-Soyad', document.getElementById('kurulumcu2').value],
+    ['', '', 'Cep', document.getElementById('kurulumcu2Tel').value],
+  ]);
+  y += 2;
+
+  // 3. Yapı Bileşeni
+  sectionHeader('Yapı Bileşeni');
+  twoCol([
+    ['Bileşen 1', document.getElementById('bilesen1').value,
+     'Kalınlık (En az)', document.getElementById('kalinlik1').value],
+    ['Bileşen 2', document.getElementById('bilesen2').value,
+     'Kalınlık (En çok)', document.getElementById('kalinlik2').value],
+    ['Bina Yapısı', document.getElementById('binaYapisi').value,
+     'Kalite', document.getElementById('kalite').value],
+  ]);
+  y += 2;
+
+  // 4. Kullanım Tarihçesi
+  const kondisyon = document.getElementById('kondisyon').value;
+  sectionHeader('Kullanım Tarihçesi');
+  oneCol('Yaşam Hattı Kondisyonu', kondisyon, Math.max(7, kondisyon.length > 60 ? 14 : 7));
+  y += 2;
+
+  // 5. Kontrol Tablosu
+  sectionHeader('Kontrol Parçaları');
+  // Tablo başlığı
+  const colWidths = [cW*0.42, cW*0.18, cW*0.18, cW*0.22];
+  const headers = ['Malzeme Adı','Miktar','Birim','Kullanım Durumu'];
+  let tx = ml;
+  doc.setFillColor(240,237,230);
+  doc.rect(ml, y, cW, 6, 'F');
+  headers.forEach((h,i) => {
+    doc.setTextColor(100,95,90); doc.setFont('helvetica','bold'); doc.setFontSize(7);
+    doc.text(h, tx+2, y+4.2);
+    tx += colWidths[i];
+  });
+  y += 6;
+
+  PARTS.forEach((p, i) => {
+    const qty  = document.getElementById('qty'+i)?.value || '—';
+    const isOk = document.getElementById('ok'+i)?.checked;
+    doc.setFillColor(i%2===0 ? 255:248, i%2===0 ? 255:246, i%2===0 ? 255:241);
+    doc.rect(ml, y, cW, 6.5, 'F');
+    doc.setDrawColor(226,221,213);
+    doc.rect(ml, y, cW, 6.5, 'S');
+    tx = ml;
+    doc.setTextColor(26,26,26); doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+    doc.text(p.name, tx+2, y+4.5);
+    tx += colWidths[0];
+    doc.setFont('courier','normal');
+    doc.text(qty, tx+colWidths[1]/2, y+4.5, {align:'center'});
+    tx += colWidths[1];
+    doc.setFont('helvetica','normal'); doc.setTextColor(100,95,90);
+    doc.text(p.birim, tx+colWidths[2]/2, y+4.5, {align:'center'});
+    tx += colWidths[2];
+    doc.setTextColor(isOk ? 45:180, isOk ? 122:30, isOk ? 58:30);
+    doc.setFont('helvetica','bold');
+    doc.text(isOk ? '✓ Kullanılabilir' : '—', tx+2, y+4.5);
+    y += 6.5;
+  });
+  y += 2;
+
+  // 6. Yorumlar
+  const yorumlar = document.getElementById('yorumlar').value;
+  sectionHeader('Yorumlar');
+  oneCol('', yorumlar, Math.max(10, 10));
+  y += 2;
+
+  // 7. Çizim
+  sectionHeader('Bina Yerleşimi & Kurulum Şeması');
+  const drawImg = drawCanvas.toDataURL('image/png');
+  const drawH = 50;
+  doc.addImage(drawImg, 'PNG', ml, y, cW, drawH);
+  y += drawH + 2;
+
+  // Sayfa sonu kontrolü
+  if (y > 240) { doc.addPage(); y = 14; }
+
+  // 8. Uyarı
+  doc.setFillColor(255,248,230);
+  doc.rect(ml, y, cW, 14, 'F');
+  doc.setDrawColor(200,150,30);
+  doc.rect(ml, y, cW, 14, 'S');
+  doc.setTextColor(100,70,10); doc.setFont('helvetica','bold'); doc.setFontSize(7);
+  doc.text('UYARI:', ml+2, y+4);
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
+  const uyari = 'Periyodik bakım yılda en az 1 kez yalnız üretici veya üreticinin yetkilendirdiği yetkin personel tarafından yapılmış olmalıdır.';
+  const uyariLines = doc.splitTextToSize(uyari, cW-4);
+  uyariLines.forEach((l,i) => doc.text(l, ml+2, y+8+(i*4)));
+  y += 16;
+
+  // 9. Karar + Tarihler
+  sectionHeader('Karar & Tarihler');
+  const kararW = cW/2;
+  doc.setFillColor(karar==='ok' ? 235:255, karar==='ok' ? 248:235, karar==='ok' ? 240:235);
+  doc.rect(ml, y, kararW, 8, 'F');
+  doc.setDrawColor(karar==='ok' ? 45:200, karar==='ok' ? 122:52, karar==='ok' ? 58:26);
+  doc.rect(ml, y, kararW, 8, 'S');
+  doc.setTextColor(karar==='ok' ? 45:200, karar==='ok' ? 122:52, karar==='ok' ? 58:26);
+  doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.text(karar==='ok' ? '✓ KULLANILABİLİR' : karar==='err' ? '✗ KULLANILAMAZ' : '— BELİRTİLMEDİ',
+    ml+kararW/2, y+5.5, {align:'center'});
+
+  doc.setFillColor(248,246,241);
+  doc.rect(ml+kararW, y, kararW, 8, 'F');
+  doc.setDrawColor(220,215,208); doc.rect(ml+kararW, y, kararW, 8, 'S');
+  doc.setTextColor(120,115,110); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+  doc.text('Sonraki Kontrol Tarihi', ml+kararW+2, y+3);
+  doc.setTextColor(26,26,26); doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.text(document.getElementById('sonrakiTarih').value||'—', ml+kararW+2, y+7);
+  y += 8;
+
+  twoCol([
+    ['Montaj / Kontrol Tarihi', document.getElementById('kontrolTarihi').value, '', ''],
+  ]);
+  y += 4;
+
+  // 10. İmzalar
+  sectionHeader('İmzalar');
+  const imzaH = 28;
+  const imzaW = cW/2 - 2;
+
+  // Sol imza kutusu
+  doc.setFillColor(248,246,241);
+  doc.rect(ml, y, imzaW, imzaH+8, 'F');
+  doc.setDrawColor(220,215,208); doc.rect(ml, y, imzaW, imzaH+8, 'S');
+  doc.setTextColor(120,115,110); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+  doc.text('Teslim Eden', ml+2, y+3.5);
+  doc.setTextColor(26,26,26); doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text(document.getElementById('teslimEdenAd').value||'—', ml+2, y+8);
+  if (!isImzaEmpty('imza1')) {
+    const i1 = document.getElementById('imza1').toDataURL('image/png');
+    doc.addImage(i1, 'PNG', ml+1, y+10, imzaW-2, imzaH-4);
+  }
+
+  // Sağ imza kutusu
+  doc.setFillColor(248,246,241);
+  doc.rect(ml+imzaW+4, y, imzaW, imzaH+8, 'F');
+  doc.setDrawColor(220,215,208); doc.rect(ml+imzaW+4, y, imzaW, imzaH+8, 'S');
+  doc.setTextColor(120,115,110); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+  doc.text('Teslim Alan', ml+imzaW+6, y+3.5);
+  doc.setTextColor(26,26,26); doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text(document.getElementById('teslimAlanAd').value||'—', ml+imzaW+6, y+8);
+  if (!isImzaEmpty('imza2')) {
+    const i2 = document.getElementById('imza2').toDataURL('image/png');
+    doc.addImage(i2, 'PNG', ml+imzaW+5, y+10, imzaW-2, imzaH-4);
+  }
+  y += imzaH + 10;
+
+  // Alt bilgi
+  doc.setFillColor(26,26,26);
+  doc.rect(0, pH-12, pW, 12, 'F');
+  doc.setFillColor(200,52,26);
+  doc.rect(0, pH-12, 6, 12, 'F');
+  doc.setTextColor(180,180,180); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+  doc.text('ARGA İŞ GÜVENLİĞİ VE ENDÜSTRİYEL ÜRÜNLER A.Ş.  |  www.argasafety.com', pW/2, pH-5, {align:'center'});
+  doc.setTextColor(100,100,100);
+  doc.text('S. 1/1', pW-mr, pH-5, {align:'right'});
+
+  // Oluşturma tarihi
+  const dosyaAdi = `Arga_KontrolFormu_${(getSerials()[0]||'form').replace(/[^a-zA-Z0-9]/g,'-')}_${new Date().toLocaleDateString('tr-TR').replace(/\./g,'-')}.pdf`;
+  doc.save(dosyaAdi);
+  showToast('✅ PDF indirildi!', 'ok');
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  buildTable();
+  initDrawCanvas();
+  initImzaCanvas('imza1');
+  initImzaCanvas('imza2');
+  loadDraft();
+
+  // URL'den seri no ve model otomatik doldur
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('model')) document.getElementById('model').value = params.get('model');
+  if (params.get('serial')) {
+    document.querySelector('.serial-input').value = params.get('serial');
+  }
+
+  // Bugünün tarihini varsayılan yap
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('kontrolTarihi').value = today;
+  document.getElementById('montajTarihi').value  = today;
+  // Sonraki kontrol: 1 yıl sonra
+  const nextYear = new Date();
+  nextYear.setFullYear(nextYear.getFullYear() + 1);
+  document.getElementById('sonrakiTarih').value = nextYear.toISOString().split('T')[0];
+});
+</script>
+</body>
+</html>
